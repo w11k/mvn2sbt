@@ -1,0 +1,25 @@
+I assume you allready have installed the Simple Build Tool.
+
+h2. Usage:
+
+h3. First we need to publish it (at the moment we are going to do this local):
+<pre><code>
+> git clone http://github.com/weiglewilczek/mvn2sbt.git
+> cd mvn2sbt
+> sbt update publish-local
+</code></pre>
+
+h3. Then we can define our processor in a different sbt project as followed:
+<pre><code>
+> *mvn2sbt is com.weiglewilczek.mvn2sbt mvn2sbt 0.1
+</code></pre>
+
+h3. Converting a pom.xml:
+<pre><code>
+> mvn2sbt pom.xml
+</code></pre>
+
+Please be aware of that the sbt project file might be overwritten, if you allready have one in the sbt project where mvn2sbt is called!
+
+mvn2sbt is open source software licensed under the "Eclipse Public License v1.0":http://www.eclipse.org/legal/epl-v10.html. Just use it!
+ 
