@@ -8,10 +8,10 @@ import org.apache.ivy.core.module.descriptor.{ModuleDescriptor => MD}
 
 class Mvn2SbtSpec extends Specification with Mockito {
 
-  "Calling ProjectPomReader.read" should {
+  "Calling ProjectPomReader" should {
 
     "throw a FileNotFoundException when pom.xml does not exist." in {
-      ProjectPomReader.read("wrongpom.xml") must throwA[FileNotFoundException]
+      ProjectPomReader("wrongpom.xml") must throwA[FileNotFoundException]
     }
   }
 
