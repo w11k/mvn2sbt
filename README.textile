@@ -2,19 +2,19 @@ I assume you allready have installed the Simple Build Tool.
 
 h2. Usage:
 
-h3. First we need to publish it (at the moment we are going to do this local):
+h3. Clone this repository and publish the project local: 
 <pre><code>
-> git clone http://github.com/weiglewilczek/mvn2sbt.git
-> cd mvn2sbt
-> sbt update publish-local
+$ git clone http://github.com/weiglewilczek/mvn2sbt.git
+$ cd mvn2sbt
+$ sbt update publish-local
 </code></pre>
 
-h3. Then we can define our processor in a different sbt project as followed:
+h3. Define our processor.
 <pre><code>
 > *mvn2sbt is com.weiglewilczek.mvn2sbt mvn2sbt 0.1
 </code></pre>
 
-h3. Converting a pom.xml:
+h3. Converting a pom.xml -> project/build/project.scala (Please use a project without a SBT project file):
 <pre><code>
 > mvn2sbt pom.xml
 </code></pre>

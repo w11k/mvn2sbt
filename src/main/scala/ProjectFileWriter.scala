@@ -38,13 +38,13 @@ trait ProjectFileWriter extends ConsoleLogger {
     fw.write("\n\n")
     dependencies foreach { d =>
       fw.write("  val " + d.getDependencyRevisionId.getName.replace("-","_").replace(".","") + " = ")
-      fw.write("\"" + d.getDependencyRevisionId.getOrganisation+"\"" + " % ")
-      fw.write("\"" + d.getDependencyRevisionId.getName + "\"" + " % ")
-      fw.write("\"" + d.getDependencyRevisionId.getRevision + "\"")
+      fw.write("\"" + d.getDependencyRevisionId.getOrganisation + "\"")
+      fw.write(convertTodoublePercent(d.getDependencyRevisionId.getName))
+      fw.write(" % \"" + d.getDependencyRevisionId.getRevision + "\"")
       if (!d.getModuleConfigurations.isEmpty)
         fw.write(" % \"" + d.getModuleConfigurations.first + "\"")
       if (!d.getAllDependencyArtifacts.isEmpty && d.getAllDependencyArtifacts.first.getAttribute("classifier") != null)
-        fw.write(sbtIfier(" classifier " + "\"" + d.getAllDependencyArtifacts.first.getAttribute("classifier") + "\""))
+        fw.write(sbtIfier(d.getAllDependencyArtifacts.first.getAttribute("classifier")))
       fw.write("\n")
     }
     fw.write("}")
@@ -69,13 +69,13 @@ trait ProjectFileWriter extends ConsoleLogger {
     fw.write("\n\n")
     fw.write("  override def libraryDependencies = Set(\n")
     dependencies foreach { d =>
-      fw.write("    \"" + d.getDependencyRevisionId.getOrganisation + "\"" + " % ")
-      fw.write("\"" + d.getDependencyRevisionId.getName + "\"" + " % ")
-      fw.write("\"" + d.getDependencyRevisionId.getRevision + "\"")
+      fw.write("    \"" + d.getDependencyRevisionId.getOrganisation + "\"")
+      fw.write(convertTodoublePercent(d.getDependencyRevisionId.getName))
+      fw.write(" % \"" + d.getDependencyRevisionId.getRevision + "\"")
       if (!d.getModuleConfigurations.isEmpty)
         fw.write(" % \"" + d.getModuleConfigurations.first + "\"")
       if (!d.getAllDependencyArtifacts.isEmpty && d.getAllDependencyArtifacts.first.getAttribute("classifier") != null)
-        fw.write(sbtIfier(" classifier " + "\"" + d.getAllDependencyArtifacts.first.getAttribute("classifier") + "\""))
+        fw.write(sbtIfier(d.getAllDependencyArtifacts.first.getAttribute("classifier")))
       if(d != dependencies.last)
         fw.write(",")
       fw.write("\n")
@@ -85,6 +85,7 @@ trait ProjectFileWriter extends ConsoleLogger {
     fw.write("\n")
     fw.close
     log(Level.Info, "Converted Successfully!")
+    
   }
 
   def apply(output: File, md: MD)  
