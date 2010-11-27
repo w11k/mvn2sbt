@@ -6,7 +6,7 @@ h3. Clone this repository and publish the project local:
 <pre><code>
 $ git clone http://github.com/weiglewilczek/mvn2sbt.git
 $ cd mvn2sbt
-$ sbt update publish-local
+$ sbt update package publish-local
 </code></pre>
 
 h3. Define our processor.
