@@ -1,10 +1,11 @@
 package com.weiglewilczek.mvn2sbt
 
 import Mvn2SbtHelpers._
-import java.io.{FileWriter, File}
-import org.apache.ivy.core.module.descriptor.{ModuleDescriptor => MD}
+import org.apache.ivy.core.module.descriptor.{ ModuleDescriptor => MD }
 import sbt.ConsoleLogger
 import sbt.Level
+import freemarker.template.{ SimpleSequence, SimpleHash }
+import java.io._
 
 object ProjectFileWriter extends ProjectFileWriter {
 
@@ -20,72 +21,104 @@ object ProjectFileWriter extends ProjectFileWriter {
   }
 }
 
-trait ProjectFileWriter extends ConsoleLogger {
+trait ProjectFileWriter extends ConsoleLogger with TemplateWriter {
 
   /**
-   * Writing out a Default Project.
+   * Writing out a Default Project, using singleJar template.
    * @param output Destination file which will be written.
    * @param md ModuleDescriptor which should have project dependencies.
    */
   def writeDefaultProject(output: File, md: MD) {
     if (output.getParentFile != null) output.getParentFile.mkdirs
-    val fw = new FileWriter(output)
+
+    val out = new FileWriter(output)
+    val tmpFile = File.createTempFile("template", ".ftl~")
+    tmpFile.deleteOnExit
+    val tmpWriter = new BufferedWriter(new FileWriter(tmpFile))
+
+    val lnr = new LineNumberReader(new InputStreamReader(getClass.getResourceAsStream("/singleJar.ftl")))
+    while(lnr.ready) {
+      tmpWriter.write(lnr.readLine)
+      tmpWriter.newLine
+    }
+    lnr.close
+    tmpWriter.close
+
+    var depList = new SimpleSequence
     val dependencies = md.getDependencies
 
-    fw.write("import sbt._\n")
-    fw.write("\n")
-    fw.write("class Project(info: ProjectInfo) extends DefaultProject(info) {")
-    fw.write("\n\n")
     dependencies foreach { d =>
-      fw.write("  val " + d.getDependencyRevisionId.getName.replace("-","_").replace(".","") + " = ")
-      fw.write("\"" + d.getDependencyRevisionId.getOrganisation + "\"")
-      fw.write(convertTodoublePercent(d.getDependencyRevisionId.getName))
-      fw.write(" % \"" + d.getDependencyRevisionId.getRevision + "\"")
+      val currentDep = new SimpleHash
+      currentDep.put("depName", d.getDependencyRevisionId.getName.replace("-","_").replace(".",""))
+      currentDep.put("organisation", "\"" + d.getDependencyRevisionId.getOrganisation + "\"")
+      currentDep.put("name", convertTodoublePercent(d.getDependencyRevisionId.getName))
+      currentDep.put("revision", "% \"" + d.getDependencyRevisionId.getRevision + "\"")
       if (!d.getModuleConfigurations.isEmpty)
-        fw.write(" % \"" + d.getModuleConfigurations.first + "\"")
+        currentDep.put("moduleConfig", "% \"" + d.getModuleConfigurations.first + "\"")
+      else currentDep.put("moduleConfig", "")
       if (!d.getAllDependencyArtifacts.isEmpty && d.getAllDependencyArtifacts.first.getAttribute("classifier") != null)
-        fw.write(sbtIfier(d.getAllDependencyArtifacts.first.getAttribute("classifier")))
-      fw.write("\n")
+        currentDep.put("classifier", sbtIfier(d.getAllDependencyArtifacts.first.getAttribute("classifier")))
+      else currentDep.put("classifier", "")
+      depList.add(currentDep)
     }
-    fw.write("}")
-    fw.write("\n")
-    fw.close
+
+    val root = new SimpleHash
+    root.put("dependencies", depList)
+
+    val templ = config.getTemplate("/" + tmpFile.getName)
+    templ.process(root, out)
+
+    out.close
     log(Level.Info, "Converted Successfully!")
   }
 
   /**
-   * Writing out a DefaultWebProject.
+   * Writing out a DefaultWebProject, using singleWar template.
    * @param output Destination file which will be written.
    * @param md ModuleDescriptor which should have project dependencies.
    */
   def writeDefaultWebProject(output: File, md: MD) {
     if (output.getParentFile != null) output.getParentFile.mkdirs
-    val fw = new FileWriter(output)
+
+    val out = new FileWriter(output)
+    val tmpFile = File.createTempFile("template", ".ftl~")
+    tmpFile.deleteOnExit
+    val tmpWriter = new BufferedWriter(new FileWriter(tmpFile))
+
+    val lnr = new LineNumberReader(new InputStreamReader(getClass.getResourceAsStream("/singleWar.ftl")))
+    while(lnr.ready) {
+      tmpWriter.write(lnr.readLine)
+      tmpWriter.newLine
+    }
+    lnr.close
+    tmpWriter.close
+
+    var depList = new SimpleSequence
     val dependencies = md.getDependencies
 
-    fw.write("import sbt._\n")
-    fw.write("\n")
-    fw.write("class Project(info: ProjectInfo) extends DefaultWebProject(info) {")
-    fw.write("\n\n")
-    fw.write("  override def libraryDependencies = Set(\n")
     dependencies foreach { d =>
-      fw.write("    \"" + d.getDependencyRevisionId.getOrganisation + "\"")
-      fw.write(convertTodoublePercent(d.getDependencyRevisionId.getName))
-      fw.write(" % \"" + d.getDependencyRevisionId.getRevision + "\"")
+      val currentDep = new SimpleHash
+      currentDep.put("organisation", "\"" + d.getDependencyRevisionId.getOrganisation + "\"")
+      currentDep.put("name", convertTodoublePercent(d.getDependencyRevisionId.getName))
+      currentDep.put("revision", "% \"" + d.getDependencyRevisionId.getRevision + "\"")
       if (!d.getModuleConfigurations.isEmpty)
-        fw.write(" % \"" + d.getModuleConfigurations.first + "\"")
+        currentDep.put("moduleConfig", "% \"" + d.getModuleConfigurations.first + "\"")
+      else currentDep.put("moduleConfig", "")
       if (!d.getAllDependencyArtifacts.isEmpty && d.getAllDependencyArtifacts.first.getAttribute("classifier") != null)
-        fw.write(sbtIfier(d.getAllDependencyArtifacts.first.getAttribute("classifier")))
-      if(d != dependencies.last)
-        fw.write(",")
-      fw.write("\n")
+        currentDep.put("classifier", sbtIfier(d.getAllDependencyArtifacts.first.getAttribute("classifier")))
+      else currentDep.put("classifier", "")
+      depList.add(currentDep)
     }
-    fw.write("  ) ++ super.libraryDependencies\n")
-    fw.write("}")
-    fw.write("\n")
-    fw.close
+
+    val root = new SimpleHash
+    root.put("dependencies", depList)
+
+    val templ = config.getTemplate("/" + tmpFile.getName)
+    templ.process(root, out)
+
+    out.close
     log(Level.Info, "Converted Successfully!")
-    
+
   }
 
   def apply(output: File, md: MD)  

@@ -7,9 +7,9 @@ object Mvn2SbtHelpers {
    * @param input Takes a classifier.
    */
   def sbtIfier(input: String): String = input match {
-    case j if (j == "javadoc") => " withJavadoc"
-    case s if (s == "sources") => " withSources"
-    case _ => " classifier " + "\"" + input + "\""
+    case j if (j == "javadoc") => "withJavadoc"
+    case s if (s == "sources") => "withSources"
+    case _ => "classifier " + "\"" + input + "\""
   }
 
   /**
@@ -19,9 +19,8 @@ object Mvn2SbtHelpers {
    */
   def convertTodoublePercent(input: String): String = input match {
     case a if (a.endsWith("_2.7.7") || a.endsWith("_2.8.0") || a.endsWith("_2.8.1")) =>
-      " %% \"" + a.reverse.dropWhile(_ != '_').toArray.drop(1).reverse.mkString + "\""
+      "%% \"" + a.reverse.dropWhile(_ != '_').toArray.drop(1).reverse.mkString + "\""
     case _ =>
-      " % \"" + input + "\""
+      "% \"" + input + "\""
   }
-
 }
